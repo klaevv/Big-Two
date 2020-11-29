@@ -1,0 +1,19 @@
+@import '../../constants/dimensions.scss';
+@import '../../constants/mixins.scss';
+
+.homePage {
+  @include page;
+  background-color: black;
+
+  .homePageContainer {
+    @include scrollView;
+  }
+
+  h1 {
+    color: white;
+  }
+
+  p {
+    color: white;
+  }
+}
