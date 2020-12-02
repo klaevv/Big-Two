@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 import React, { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { LioWebRTC } from "react-liowebrtc"
@@ -8,6 +6,7 @@ import HomePage from './pages/HomePage/HomePage'
 
 function contains(obj, list) {
   let i
+  // eslint-disable-next-line no-plusplus
   for (i = 0; i < list.length; i++) {
     if (list[i] === obj) {
       return true
@@ -56,6 +55,7 @@ function App() {
   //   this.props.webrtc.disconnect()
   // }
 
+  // eslint-disable-next-line no-unused-vars
   const handlePeerData = (webrtc, type, payload, peer) => {
     console.log('received', type, payload)
     switch (type) {
@@ -67,13 +67,13 @@ function App() {
     };
   }
 
+  // eslint-disable-next-line no-unused-vars
   const handleRemovedPeer = (webrtc, peer) => {
     setPeers(peers.filter(p => !p.closed))
   }
 
   const sendPlay = (cards) => {
     if (wrtc) {
-      console.log(cards)
       wrtc.shout('play', cards)
     }
     setTable(cards)
