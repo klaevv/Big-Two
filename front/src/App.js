@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { LioWebRTC } from "react-liowebrtc"
+import { LioWebRTC } from 'react-liowebrtc'
 
 import HomePage from './pages/HomePage/HomePage'
 
 function contains(obj, list) {
   let i
-  // eslint-disable-next-line no-plusplus
   for (i = 0; i < list.length; i++) {
     if (list[i] === obj) {
       return true
@@ -36,12 +35,14 @@ function App() {
   }
 
   const addChat = (name, message, alert = false) => {
-    setChatLog(chatLog.concat({
-      name,
-      message: `${message}`,
-      timestamp: `${Date.now()}`,
-      alert
-    }))
+    setChatLog(
+      chatLog.concat({
+        name,
+        message: `${message}`,
+        timestamp: `${Date.now()}`,
+        alert,
+      })
+    )
   }
 
   const handleCreatedPeer = (webrtc, peer) => {
@@ -49,7 +50,7 @@ function App() {
     setPeers([...peers, peer])
   }
 
-    // const handleShut = () => {
+  // const handleShut = () => {
   //   this.setState({ containerClass: 'container animated hinge' })
   //   this.props.webrtc.leaveRoom()
   //   this.props.webrtc.disconnect()
@@ -63,13 +64,12 @@ function App() {
         setTable(payload)
         break
       default:
-        return
-    };
+    }
   }
 
   // eslint-disable-next-line no-unused-vars
   const handleRemovedPeer = (webrtc, peer) => {
-    setPeers(peers.filter(p => !p.closed))
+    setPeers(peers.filter((p) => !p.closed))
   }
 
   const sendPlay = (cards) => {
@@ -77,7 +77,7 @@ function App() {
       wrtc.shout('play', cards)
     }
     setTable(cards)
-    setHand(hand.filter(c => !contains(c, cards)))
+    setHand(hand.filter((c) => !contains(c, cards)))
   }
 
   return (
@@ -88,12 +88,7 @@ function App() {
         onRemovedPeer={handleRemovedPeer}
         onReceivedPeerData={handlePeerData}
       >
-        <HomePage
-          chatLog={chatLog}
-          hand={hand}
-          table={table}
-          sendPlay={sendPlay}
-        />
+        <HomePage chatLog={chatLog} hand={hand} table={table} sendPlay={sendPlay} />
       </LioWebRTC>
     </div>
   )
