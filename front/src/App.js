@@ -23,6 +23,7 @@ function App() {
   const [chatLog, setChatLog] = useState([]) // Right now just 'Player joined' notifications
   const [hand, setHand] = useState(['s1', 's2', 's3']) // The cards the player is holding.
   const [table, setTable] = useState([]) // Most recent play (combination of cards).
+  const [turn, setTurn] = useState(0)
   const [wrtc, setWrtc] = useState() // TODO: Temp solution
 
   useEffect(() => {
@@ -31,8 +32,9 @@ function App() {
   }, [location])
 
   const join = (webrtc) => {
-    webrtc.joinRoom('react-liowebrtc-test-demo')
+    webrtc.joinRoom('big-two-game')
     setWrtc(webrtc)
+    setPeers([{ id: webrtc.id }]) // Add self
   }
 
   const addChat = (name, message, alert = false) => {
@@ -46,7 +48,11 @@ function App() {
 
   const handleCreatedPeer = (webrtc, peer) => {
     addChat(`Peer-${peer.id.substring(0, 5)} joined the room!`, ' ', true)
-    setPeers([...peers, peer])
+    setPeers([...peers, peer].sort((a, b) => a.id.localeCompare(b.id)))
+
+    // TODO: Move this to where the game begins.
+    // Reset the turn to the first player:
+    setTurn(0)
   }
 
     // const handleShut = () => {
@@ -61,6 +67,8 @@ function App() {
     switch (type) {
       case 'play':
         setTable(payload)
+        // Next player's turn:
+        setTurn((turn+1) % peers.length)
         break
       default:
         return
@@ -80,6 +88,13 @@ function App() {
     setHand(hand.filter(c => !contains(c, cards)))
   }
 
+  let myId = ''
+  if (wrtc) {
+    myId = wrtc.id
+  }
+  // console.log(myId, turn, peers[turn], peers)
+  const myTurn = peers[turn] && peers[turn].id === myId
+
   return (
     <div className="App">
       <LioWebRTC
@@ -93,6 +108,7 @@ function App() {
           hand={hand}
           table={table}
           sendPlay={sendPlay}
+          myTurn={myTurn}
         />
       </LioWebRTC>
     </div>
