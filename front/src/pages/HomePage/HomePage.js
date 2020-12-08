@@ -64,6 +64,7 @@ const HomePage = (props) => {
     return (countObj[0] === 2 && countObj[1] === 3) || (countObj[0] === 3 && countObj[1] === 2)
   }
 
+  // eslint-disable-next-line no-unused-vars
   const isValidHand = (arr) => {
     const single = arr.length === 1
     const pairs = arr.length === 2 && arr[0].rank === arr[1].rank
