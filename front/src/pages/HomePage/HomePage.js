@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 const HomePage = (props) => {
-  const { chatLog, sendPlay, table, hand } = props
+  const { chatLog, sendPlay, table, hand, myTurn } = props
 
   const generateChats = () => {
     return chatLog.map((item) => (
@@ -18,6 +18,8 @@ const HomePage = (props) => {
     }
   }
 
+  const playButtonDisabled = hand.length === 0 || !myTurn
+
   return (
     <div className="homePage">
       <div className="homePageContainer">
@@ -26,7 +28,7 @@ const HomePage = (props) => {
         <span style={{ color: '#888' }}>On the table: </span>
         {table.map(card => <span style={{ color: '#888' }} key={card}>{card}</span>)}
         <br />
-        <button type="button" disabled={hand.length === 0} onClick={handlePlayCard}>Play a card</button>
+        <button type="button" disabled={playButtonDisabled} onClick={handlePlayCard}>Play a card</button>
       </div>
     </div>
   )
@@ -37,12 +39,14 @@ HomePage.propTypes = {
   sendPlay: PropTypes.func,
   table: PropTypes.arrayOf(PropTypes.string),
   hand: PropTypes.arrayOf(PropTypes.string),
+  myTurn: PropTypes.bool,
 }
 HomePage.defaultProps = {
   chatLog: [],
   sendPlay: () => {},
   table: [],
   hand: [],
+  myTurn: false,
 }
 
 export default HomePage
