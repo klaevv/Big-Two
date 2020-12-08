@@ -21,6 +21,7 @@ module.exports = {
     semi: [2, 'never'],
     'react/jsx-one-expression-per-line': 'off',
     'import/prefer-default-export': 'off',
+    'no-plusplus': ['error', { allowForLoopAfterthoughts: true }],
   },
   overrides: [
     {
