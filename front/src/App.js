@@ -53,7 +53,7 @@ function App() {
   }
 
   const join = (webrtc) => {
-    webrtc.joinRoom('big-two-game')
+    webrtc.joinRoom('big-twooo-game')
     setWrtc(webrtc)
     setPeers([{ id: webrtc.connection.connection.id, ready: false }]) // Add self
     setMyId(webrtc.connection.connection.id)
@@ -90,13 +90,17 @@ function App() {
   // eslint-disable-next-line no-unused-vars
   const handlePeerData = (webrtc, type, payload, peer) => {
     switch (type) {
-      case 'ready':
-        setPeers(peers.map(
-          p => p.id === peer.id ? { ...peer, ready: true } : p)
-        )
+      // Client signals it is ready to start
+      case 'ready': {
+        console.log("got ready event")
+        let currentPeers = getPeers()
+        currentPeers = currentPeers.map(p => p.id === peer.id ? { ...peer, ready: true } : p)
+        setPeers(currentPeers)
+        console.log(peers)
         // if all done start game
         addChat(`Peer-${peer.id.substring(0, 5)} is ready!`, ' ', true)
         break
+      }
       case 'play':
         setTable(payload)
         advanceTurn(getTurn(), getPeers().length) // bug: peers.length or turn does not work here
@@ -139,6 +143,7 @@ function App() {
       wrtc.shout('ready', "")
     }
     setReady(true)
+    console.log("updating self")
     setPeers(peers.map(p => p.id === myId ? { ...p, ready: true } : p))
   }
 
