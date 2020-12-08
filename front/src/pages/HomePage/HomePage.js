@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 
 const HomePage = (props) => {
   const { chatLog, sendPlay, table, hand, myTurn, ready, sendReady, gameStarted, sendPass } = props
+  const [selected, setSelected] = useState([])
 
   const generateChats = () => {
     return chatLog.map((item) => (
@@ -79,10 +80,20 @@ const HomePage = (props) => {
     )
   }
 
-  const handlePlayCard = () => {
-    if (hand.length > 0) {
-      // Check that combination is legit (possible to play)
-      sendPlay([hand[0]]) // Send a combination or a single card.
+  const handlePlayCards = () => {
+    if (hand.length > 0) { // Check that combination is legit (possible to play)
+      sendPlay(selected) // Send a combination or a single card.
+    }
+  }
+
+  const handleCardSelected = (e) => {
+    const selectedIndex = e.target.name
+    const selectedCard = hand[selectedIndex]
+
+    if (e.target.checked) {
+      setSelected(prev => [...prev, selectedCard])
+    } else {
+      setSelected(prev => prev.filter(c => !(c.suit === selectedCard.suit && c.rank === selectedCard.rank)))
     }
   }
 
@@ -95,25 +106,46 @@ const HomePage = (props) => {
   const actionButtonDisabled = hand.length === 0 || !myTurn || !gameStarted
 
 
+  // TODO: Sort hand
+
   return (
     <div className="homePage">
       <div className="homePageContainer">
         <h1>Big Two</h1>
         {generateChats()}
         <span style={{ color: '#888' }}>On the table: </span>
-        {table.map((card) => (
-          <span style={{ color: '#888' }} key={card}>
-            {card}
+        {table.map(card => (
+          <span style={{ color: '#888' }} key={`span-${card.suit}-${card.rank}`}>
+            {card.suit}{card.rank},
           </span>
         ))}
         <br />
-        <button type="button" disabled={actionButtonDisabled} onClick={handlePlayCard}>
-          Play a card
-        </button>
+        <button type="button" disabled={actionButtonDisabled} onClick={handlePlayCards}>Play a card</button>
         <br />
         <button type="button" hidden={ready} onClick={handleReady}>Ready to start</button>
         <br />
         <button type="button" disabled={actionButtonDisabled} onClick={sendPass}>Pass</button>
+        <br />
+        <form>
+          {hand.map((card, index) => (
+            <div key={`div-${card.suit}-${card.rank}`}>
+              <input
+                type="checkbox"
+                key={`input-${card.suit}-${card.rank}`}
+                id={`card-${card.suit}-${card.rank}`}
+                name={index}
+                onChange={handleCardSelected}
+              />
+              <label
+                key={`label-${card.suit}-${card.rank}`}
+                htmlFor={`card-${card.suit}-${card.rank}`}
+                style={{ color: '#888' }}
+              >
+                {card.suit}{card.rank}
+              </label>
+            </div>
+          ))}
+        </form>
       </div>
     </div>
   )
@@ -123,8 +155,8 @@ HomePage.propTypes = {
   chatLog: PropTypes.arrayOf(PropTypes.object),
   sendPlay: PropTypes.func,
   sendPass: PropTypes.func,
-  table: PropTypes.arrayOf(PropTypes.string),
-  hand: PropTypes.arrayOf(PropTypes.string),
+  table: PropTypes.arrayOf(PropTypes.object),
+  hand: PropTypes.arrayOf(PropTypes.object),
   myTurn: PropTypes.bool,
   ready: PropTypes.bool,
   sendReady: PropTypes.func,

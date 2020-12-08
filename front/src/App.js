@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { LioWebRTC } from 'react-liowebrtc'
 
 import HomePage from './pages/HomePage/HomePage'
+import { createShuffledDeck, getHand } from './Deck'
 
 function contains(obj, list) {
   let i
@@ -22,8 +23,10 @@ function App() {
   const [myId, setMyId] = useState('')
   // TODO: bug: chatLog resets? Try with 3 players.
   const [chatLog, setChatLog] = useState([]) // Right now just 'Player joined' notifications
-  const [hand, setHand] = useState(['s1', 's2', 's3']) // The cards the player is holding.
+  const [hand, setHand] = useState([]) // The cards the player is holding.
   const [table, setTable] = useState([]) // Most recent play (combination of cards).
+  // eslint-disable-next-line no-unused-vars
+  const [cards, setCards] = useState([])
   const [turn, setTurn] = useState(0)
   const [wrtc, setWrtc] = useState() // TODO: Temp solution
   const [ready, setReady] = useState(false) // Am I ready?
@@ -55,6 +58,15 @@ function App() {
     return currentPeers
   }
 
+  const getMyId = () => {
+    let currentMyId = ''
+    setMyId(prev => {
+      currentMyId = prev
+      return prev
+    })
+    return currentMyId
+  }
+
   const join = (webrtc) => {
     webrtc.joinRoom('big-asd-game')
     setWrtc(webrtc)
@@ -79,10 +91,21 @@ function App() {
   const handleCreatedPeer = (webrtc, peer) => {
     if (gameStarted) return
     addChat(`Peer-${peer.id.substring(0, 5)} joined the room!`, ' ', true)
-    setPeers(prev => [...prev, { ...peer, ready: false }].sort((a, b) => a.id.localeCompare(b.id)))
+    let newPeers = []
+    setPeers(prev => {
+      newPeers = [...prev, { ...peer, ready: false }].sort((a, b) => a.id.localeCompare(b.id))
+      return newPeers
+    })
+
     // TODO: Move this to where the game begins.
     // Reset the turn to the first player:
     setTurn(0)
+
+    // TODO: Move to where the game begins.
+    const shuffledCards = createShuffledDeck(newPeers[0].id)
+    setCards(shuffledCards)
+    const myIndex = newPeers.map(p => p.id).indexOf(getMyId())
+    setHand(getHand(shuffledCards, myIndex, newPeers.length, shuffledCards.length))
   }
 
   // const handleShut = () => {
@@ -133,12 +156,12 @@ function App() {
     setPeers(currPeers.filter((p) => !p.closed))
   }
 
-  const sendPlay = (cards) => {
+  const sendPlay = (cardsToPlay) => {
     if (wrtc) {
-      wrtc.shout('play', cards)
+      wrtc.shout('play', cardsToPlay)
     }
-    setTable(cards)
-    setHand(hand.filter((c) => !contains(c, cards)))
+    setTable(cardsToPlay)
+    setHand(hand.filter((c) => !contains(c, cardsToPlay)))
     advanceTurn()
     // TODO: If hand.length === 0, addChat("peer myId won!"), and remove from active game.
   }
