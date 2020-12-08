@@ -31,9 +31,14 @@ function App() {
   // eslint-disable-next-line no-unused-vars
   const [cards, setCards] = useState([])
   const [turn, setTurn] = useState(0)
+  // const [myTurn, setMyTurn] = useState(false)
   const [wrtc, setWrtc] = useState() // TODO: Temp solution
   const [ready, setReady] = useState(false) // Am I ready?
   // const [gamePeers, setGamePeers] = useState([])
+
+  const [, updateState] = React.useState()
+  const forceUpdate = React.useCallback(() => updateState({}), [])
+
 
   useEffect(() => {
     // eslint-disable-next-line no-console
@@ -109,11 +114,13 @@ function App() {
   }
 
   // Next player's turn:
-  const advanceTurn = (currTurn = turn, peerCount = peers.length) =>
-    setTurn((currTurn + 1) % peerCount)
+  const advanceTurn = (currTurn = turn, currentPeers = peers) => {
+    setTurn((currTurn + 1) % currentPeers.length)
+    // setMyTurn(currentPeers[currTurn] && currentPeers[turn].id === myId)
+  }
 
   const handleCreatedPeer = (webrtc, peer) => {
-    if (gameStarted) return
+    // if (gameStarted) return // commented for revival to work
     addChat(`Peer-${peer.id.substring(0, 5)} joined the room!`, ' ', true)
     let newPeers = []
     setPeers(prev => {
@@ -125,6 +132,7 @@ function App() {
   const startGame = (currentPeers, webrtc) => {
     // Reset the turn to the first player:
     setTurn(0)
+    advanceTurn(0, currentPeers)
     // Shuffle cards based on first peer id, and deal them evenly:
     const currentMyId = webrtc.connection.connection.id
     const shuffledCards = createShuffledDeck(currentPeers[0].id)
@@ -205,6 +213,7 @@ function App() {
       setHand(receivedAllHands[peerIndex].hand)
     }
     setAllHands(receivedAllHands)
+    // setMyId(receivedAllHands[peerIndex].id)
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -228,7 +237,7 @@ function App() {
         console.log("game over")
         addChat(`Peer-${peer.id.substring(0, 5)} won!`, ' ', true)
         // reset all state
-        const currentPeers = getPeers().map(p => { return { ...p, ready: false } })
+        currentPeers = getPeers().map(p => { return { ...p, ready: false } })
         setPeers(currentPeers)
         setReady(false)
         setHand([])
@@ -238,12 +247,12 @@ function App() {
       }
       case 'play': {
         setTable(payload)
-        advanceTurn(getTurn(), currentPeers.length) // bug: peers.length or turn does not work here
+        advanceTurn(getTurn(), currentPeers) // bug: peers.length or turn does not work here
         setAllHands(updateHand(peer, payload, currentAllHands, currentPeers))
         break
       }
       case 'pass': {
-        advanceTurn(getTurn(), currentPeers.length)
+        advanceTurn(getTurn(), currentPeers)
         break
       }
       case 'revive': {
@@ -270,7 +279,12 @@ function App() {
     } else if (currTurn > disconnectedPeerIndex) {
       setTurn(currTurn - 1)
     }
-    setPeers(currPeers.filter((p) => !p.closed))
+    console.log('myid',webrtc.connection.connection.id, 'rem peer',disconnectedPeerIndex)
+    currPeers.splice(disconnectedPeerIndex, 1)
+    setPeers([...currPeers])
+    // eslint-disable-next-line react/no-this-in-sfc
+    forceUpdate()
+    // setWrtc(webrtc)
   }
 
   const sendWin = () => {
@@ -321,9 +335,10 @@ function App() {
       startGame(newPeers, wrtc)
     }
   }
-console.log('turn',turn)
+
+  console.log('myId', myId, 'turn', turn, 'peers',peers)
   const myTurn = peers[turn] && peers[turn].id === myId
-  console.log(peers)
+
   return (
     <div className="App">
       <LioWebRTC
