@@ -1,13 +1,12 @@
 /* eslint-disable no-console */
 import React, { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { LioWebRTC } from "react-liowebrtc"
+import { LioWebRTC } from 'react-liowebrtc'
 
 import HomePage from './pages/HomePage/HomePage'
 
 function contains(obj, list) {
   let i
-  // eslint-disable-next-line no-plusplus
   for (i = 0; i < list.length; i++) {
     if (list[i] === obj) {
       return true
@@ -35,7 +34,7 @@ function App() {
 
   const getTurn = () => {
     let currentTurn = 0
-    setTurn(prev => {
+    setTurn((prev) => {
       currentTurn = prev
       return prev
     })
@@ -44,7 +43,7 @@ function App() {
 
   const getPeers = () => {
     let currentPeers = 0
-    setPeers(prev => {
+    setPeers((prev) => {
       currentPeers = prev
       return prev
     })
@@ -63,9 +62,9 @@ function App() {
       name,
       message: `${message}`,
       timestamp: `${Date.now()}`,
-      alert
+      alert,
     }
-    setChatLog(prev => [...prev, logItem])
+    setChatLog((prev) => [...prev, logItem])
   }
 
   // Next player's turn:
@@ -74,7 +73,7 @@ function App() {
 
   const handleCreatedPeer = (webrtc, peer) => {
     addChat(`Peer-${peer.id.substring(0, 5)} joined the room!`, ' ', true)
-    setPeers(prev => [...prev, peer].sort((a, b) => a.id.localeCompare(b.id)))
+    setPeers((prev) => [...prev, peer].sort((a, b) => a.id.localeCompare(b.id)))
 
     // TODO: Move this to where the game begins.
     // Reset the turn to the first player:
@@ -98,15 +97,14 @@ function App() {
         advanceTurn(getTurn(), getPeers().length)
         break
       default:
-        return
-    };
+    }
   }
 
   // eslint-disable-next-line no-unused-vars
   const handleRemovedPeer = (webrtc, peer) => {
     const currPeers = getPeers()
     const currTurn = getTurn()
-    const disconnectedPeerIndex = currPeers.map(p => p.id).indexOf(peer.id)
+    const disconnectedPeerIndex = currPeers.map((p) => p.id).indexOf(peer.id)
 
     // 1) If the turn index smaller (i.e before) the disconnected peer's index,
     // then the turn automatically moves to the next peer.
@@ -118,7 +116,7 @@ function App() {
     } else if (currTurn > disconnectedPeerIndex) {
       setTurn(currTurn - 1)
     }
-    setPeers(currPeers.filter(p => !p.closed))
+    setPeers(currPeers.filter((p) => !p.closed))
   }
 
   const sendPlay = (cards) => {
@@ -126,7 +124,7 @@ function App() {
       wrtc.shout('play', cards)
     }
     setTable(cards)
-    setHand(hand.filter(c => !contains(c, cards)))
+    setHand(hand.filter((c) => !contains(c, cards)))
     advanceTurn()
     // TODO: If hand.length === 0, addChat("peer myId won!"), and remove from active game.
   }
