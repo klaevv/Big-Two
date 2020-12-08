@@ -36,6 +36,7 @@ function App() {
   const [ready, setReady] = useState(false) // Am I ready?
   // const [gamePeers, setGamePeers] = useState([])
 
+  // hacky hack
   const [, updateState] = React.useState()
   const forceUpdate = React.useCallback(() => updateState({}), [])
 
@@ -202,6 +203,7 @@ function App() {
       // console.log('send revive',currentAllHands)
       // TODO: improvement: use only one node to "shout"
       webrtc.shout('revive', currentAllHands) // Security issue: Anyone can get anyones cards if they know other's names.
+      setTurn(0) // TODO: Improvement: don't reset turn, but use the previous one from peers
     }
   }
 
@@ -213,6 +215,7 @@ function App() {
       setHand(receivedAllHands[peerIndex].hand)
     }
     setAllHands(receivedAllHands)
+    setTurn(0) // TODO: Improvement: don't reset turn, but use the previous one from peers
     // setMyId(receivedAllHands[peerIndex].id)
   }
 
