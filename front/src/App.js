@@ -56,7 +56,7 @@ function App() {
   }
 
   const join = (webrtc) => {
-    webrtc.joinRoom('big-asd-game')
+    webrtc.joinRoom('big-sad-game')
     setWrtc(webrtc)
     setPeers([{ id: webrtc.connection.connection.id, ready: false }]) // Add self
     setMyId(webrtc.connection.connection.id)
@@ -96,20 +96,28 @@ function App() {
     switch (type) {
       // Client signals it is ready to start
       case 'ready': {
-        console.log("got ready event")
         let currentPeers = getPeers()
         currentPeers = currentPeers.map(p => p.id === peer.id ? { ...peer, ready: true } : p)
         setPeers(currentPeers)
         addChat(`Peer-${peer.id.substring(0, 5)} is ready!`, ' ', true)
         break
       }
-      case 'play':
+      case 'win': {
+        console.log("game over")
+        addChat(`Peer-${peer.id.substring(0, 5)} won!`, ' ', true)
+        const currentPeers = getPeers().map(p => { return { ...p, ready: false } })
+        setPeers(currentPeers)
+        break
+      }
+      case 'play': {
         setTable(payload)
         advanceTurn(getTurn(), getPeers().length) // bug: peers.length or turn does not work here
         break
-      case 'pass':
+      }
+      case 'pass': {
         advanceTurn(getTurn(), getPeers().length)
         break
+      }
       default:
     }
   }
@@ -133,6 +141,12 @@ function App() {
     setPeers(currPeers.filter((p) => !p.closed))
   }
 
+  const sendWin = () => {
+    if (wrtc) {
+      wrtc.shout('win', '')
+    }
+  }
+
   const sendPlay = (cards) => {
     if (wrtc) {
       wrtc.shout('play', cards)
@@ -140,8 +154,14 @@ function App() {
     setTable(cards)
     setHand(hand.filter((c) => !contains(c, cards)))
     advanceTurn()
-    // TODO: If hand.length === 0, addChat("peer myId won!"), and remove from active game.
+    if (hand.length === 0) {
+      addChat(`You win!`)
+      sendWin()
+      const cp = getPeers().map(p => { return { ...p, ready: false } })
+      setPeers(cp)
+    }
   }
+
 
   const sendPass = () => {
     if (wrtc) {
@@ -155,7 +175,6 @@ function App() {
       wrtc.shout('ready', "")
     }
     setReady(true)
-    console.log("updating self")
     setPeers(peers.map(p => p.id === myId ? { ...p, ready: true } : p))
   }
 
