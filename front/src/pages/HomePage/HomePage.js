@@ -17,21 +17,61 @@ const HomePage = (props) => {
   const isSequential = (arr) => {
     for (let i = 1, len = arr.length; i < len; i++) {
       // check if current value smaller than previous value
-      if (arr[i] - 1 === arr[i - 1]) {
+      if (arr[i] - 1 !== arr[i - 1]) {
         return false
       }
     }
-
     return true
   }
 
+  const isSameSuite = (arr) => {
+    for (let i = 1, len = arr.length; i < len; i++) {
+      // check if current value smaller than previous value
+      if (arr[i].suite !== arr[i - 1].suite) {
+        return false
+      }
+    }
+    return true
+  }
+
+  const fourSameRanks = (arr) => {
+    const ranks = arr.map((c) => c.rank)
+    let differences = 0
+    for (let i = 1, len = ranks.length; i < len; i++) {
+      // check if current value smaller than previous value
+      if (ranks[i] !== ranks[i - 1]) {
+        differences += 1
+      }
+    }
+    return differences < 2
+  }
+
+  const twoAndThreeSameRanks = (arr) => {
+    const ranks = arr.map((c) => c.rank)
+    let differences = 0
+    for (let i = 1, len = ranks.length; i < len; i++) {
+      // check if current value smaller than previous value
+      if (ranks[i].suite !== arr[i - 1]) {
+        differences += 1
+      }
+    }
+    return differences < 2
+  }
+
+  const isValidHand = (arr) => {
+    const valid1 = arr.length === 1
+    const valid2 = arr.length === 2 && arr[0].rank === arr[1].rank
+    const valid3 = arr.length === 3 && arr[0].rank === arr[1].rank && arr[0].rank === arr[2].rank
+    const straight = arr.length === 5 && isSequential(arr)
+    const flush = arr.length === 5 && isSameSuite(arr)
+    const straightFlush = arr.length === 5 && isSequential(arr) && isSameSuite(arr)
+    const fourOfAKind = arr.length === 5 && fourSameRanks(arr)
+    return valid1 || valid2 || valid3 || straight || flush || straightFlush || fourOfAKind
+  }
+
   const handlePlayCard = () => {
-    const valid1 = hand.length === 1
-    const valid2 = hand.length === 2 && hand[0].rank === hand[1].rank
-    const valid3 =
-      hand.length === 3 && hand[0].rank === hand[1].rank && hand[0].rank === hand[2].rank
-    const straight = hand.length === 5 && isSequential(hand)
-    if (valid1 || valid2 || valid3 || straight) {
+    if (hand.length > 0) {
+      // Check that combination is legit (possible to play)
       // Check that combination is legit (possible to play)
       sendPlay([hand[0]]) // Send a combination or a single card.
     }
