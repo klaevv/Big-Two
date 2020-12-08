@@ -15,9 +15,10 @@ const HomePage = (props) => {
   }
 
   const isSequential = (arr) => {
-    for (let i = 1, len = arr.length; i < len; i++) {
-      // check if current value smaller than previous value
-      if (arr[i] - 1 !== arr[i - 1]) {
+    const ranks = arr.map((c) => c.rank)
+    for (let i = 1, len = ranks.length; i < len; i++) {
+      // check if current rank smaller than previous value by one
+      if (ranks[i] - 1 !== ranks[i - 1]) {
         return false
       }
     }
@@ -25,9 +26,10 @@ const HomePage = (props) => {
   }
 
   const isSameSuite = (arr) => {
-    for (let i = 1, len = arr.length; i < len; i++) {
-      // check if current value smaller than previous value
-      if (arr[i].suite !== arr[i - 1].suite) {
+    const suites = arr.map((c) => c.suites)
+    for (let i = 1, len = suites.length; i < len; i++) {
+      // check if current suite is different than previous value
+      if (suites[i] !== suites[i - 1]) {
         return false
       }
     }
@@ -38,7 +40,7 @@ const HomePage = (props) => {
     const ranks = arr.map((c) => c.rank)
     let differences = 0
     for (let i = 1, len = ranks.length; i < len; i++) {
-      // check if current value smaller than previous value
+      // check if current rank is different than previous value
       if (ranks[i] !== ranks[i - 1]) {
         differences += 1
       }
@@ -46,27 +48,34 @@ const HomePage = (props) => {
     return differences < 2
   }
 
+  function distinct(value, index, self) {
+    return self.indexOf(value) === index
+  }
+
   const twoAndThreeSameRanks = (arr) => {
-    const ranks = arr.map((c) => c.rank)
-    let differences = 0
-    for (let i = 1, len = ranks.length; i < len; i++) {
-      // check if current value smaller than previous value
-      if (ranks[i].suite !== arr[i - 1]) {
-        differences += 1
-      }
+    const suites = arr.map((c) => c.suites)
+    if (arr.filter(distinct).length !== 2) {
+      return false
     }
-    return differences < 2
+    const countObj = {}
+    for (let i = 0, len = suites.length; i < len; i++) {
+      countObj[suites[i]] = (countObj[suites[i]] || 0) + 1
+    }
+    return (countObj[0] === 2 && countObj[1] === 3) || (countObj[0] === 3 && countObj[1] === 2)
   }
 
   const isValidHand = (arr) => {
-    const valid1 = arr.length === 1
-    const valid2 = arr.length === 2 && arr[0].rank === arr[1].rank
-    const valid3 = arr.length === 3 && arr[0].rank === arr[1].rank && arr[0].rank === arr[2].rank
+    const single = arr.length === 1
+    const pairs = arr.length === 2 && arr[0].rank === arr[1].rank
+    const triples = arr.length === 3 && arr[0].rank === arr[1].rank && arr[0].rank === arr[2].rank
     const straight = arr.length === 5 && isSequential(arr)
     const flush = arr.length === 5 && isSameSuite(arr)
     const straightFlush = arr.length === 5 && isSequential(arr) && isSameSuite(arr)
     const fourOfAKind = arr.length === 5 && fourSameRanks(arr)
-    return valid1 || valid2 || valid3 || straight || flush || straightFlush || fourOfAKind
+    const fullHouse = arr.length === 5 && twoAndThreeSameRanks(arr)
+    return (
+      single || pairs || triples || straight || flush || straightFlush || fourOfAKind || fullHouse
+    )
   }
 
   const handlePlayCard = () => {
