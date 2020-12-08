@@ -34,6 +34,24 @@ function App() {
     console.log('pathname', location.pathname)
   }, [location])
 
+  const getTurn = () => {
+    let currentTurn = 0
+    setTurn(prev => {
+      currentTurn = prev
+      return prev
+    })
+    return currentTurn
+  }
+
+  const getPeers = () => {
+    let currentPeers = 0
+    setPeers(prev => {
+      currentPeers = prev
+      return prev
+    })
+    return currentPeers
+  }
+
   const join = (webrtc) => {
     webrtc.joinRoom('big-two-game')
     setWrtc(webrtc)
@@ -71,17 +89,6 @@ function App() {
 
   // eslint-disable-next-line no-unused-vars
   const handlePeerData = (webrtc, type, payload, peer) => {
-    let currentPeersLength = 0
-    setPeers(prev => {
-      currentPeersLength = prev.length
-      return prev
-    })
-    let currentTurn = 0
-    setTurn(prev => {
-      currentTurn = prev
-      return prev
-    })
-
     switch (type) {
       case 'ready':
         setPeers(peers.map(
@@ -92,7 +99,7 @@ function App() {
         break
       case 'play':
         setTable(payload)
-        advanceTurn(currentTurn, currentPeersLength) // bug: peers.length or turn does not work here
+        advanceTurn(getTurn(), getPeers().length) // bug: peers.length or turn does not work here
         break
       default:
         return
@@ -101,8 +108,21 @@ function App() {
 
   // eslint-disable-next-line no-unused-vars
   const handleRemovedPeer = (webrtc, peer) => {
-    setPeers(peers.filter(p => !p.closed))
-    // TODO: who's turn?
+    const currPeers = getPeers()
+    const currTurn = getTurn()
+    const disconnectedPeerIndex = currPeers.map(p => p.id).indexOf(peer.id)
+
+    // 1) If the turn index smaller (i.e before) the disconnected peer's index,
+    // then the turn automatically moves to the next peer.
+    // 2) If turn index === peers.length - 1, the turn should move to index 0.
+    // 3) Otherwise the turn index is bigger than the disappeared peer's index,
+    // so the turn becomes offset (bigger) by 1.
+    if (currTurn === currPeers.length - 1) {
+      setTurn(0)
+    } else if (currTurn > disconnectedPeerIndex) {
+      setTurn(currTurn - 1)
+    }
+    setPeers(currPeers.filter(p => !p.closed))
   }
 
   const sendPlay = (cards) => {
