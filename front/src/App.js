@@ -21,16 +21,25 @@ function App() {
 
   const [peers, setPeers] = useState([]) // Players
   const [myId, setMyId] = useState('')
-  // TODO: bug: chatLog resets? Try with 3 players.
+  // eslint-disable-next-line no-unused-vars
+  const [myName, setMyName] = useState('')
   const [chatLog, setChatLog] = useState([]) // Right now just 'Player joined' notifications
   const [hand, setHand] = useState([]) // The cards the player is holding.
+  // eslint-disable-next-line no-unused-vars
+  const [allHands, setAllHands] = useState([])
   const [table, setTable] = useState([]) // Most recent play (combination of cards).
   // eslint-disable-next-line no-unused-vars
   const [cards, setCards] = useState([])
   const [turn, setTurn] = useState(0)
+  // const [myTurn, setMyTurn] = useState(false)
   const [wrtc, setWrtc] = useState() // TODO: Temp solution
   const [ready, setReady] = useState(false) // Am I ready?
   // const [gamePeers, setGamePeers] = useState([])
+
+  // hacky hack
+  const [, updateState] = React.useState()
+  const forceUpdate = React.useCallback(() => updateState({}), [])
+
 
   useEffect(() => {
     // eslint-disable-next-line no-console
@@ -38,7 +47,9 @@ function App() {
   }, [location])
 
   // Everyone is ready and there are at least 2 players
-  const gameStarted = peers.length > 1 ? peers.every(p => p.ready === true) : false
+  const hasGameStarted = (currentPeers = peers) =>
+    currentPeers.length > 1 ? currentPeers.every(p => p.ready === true) : false
+  const gameStarted = hasGameStarted()
 
   const getTurn = () => {
     let currentTurn = 0
@@ -58,13 +69,32 @@ function App() {
     return currentPeers
   }
 
-  const getMyId = () => {
-    let currentMyId = ''
-    setMyId(prev => {
-      currentMyId = prev
+  // const getMyId = () => {
+  //   let currentMyId = ''
+  //   setMyId(prev => {
+  //     currentMyId = prev
+  //     return prev
+  //   })
+  //   return currentMyId
+  // }
+
+  // eslint-disable-next-line no-unused-vars
+  const getAllHands = () => {
+    let currentAllHands = []
+    setAllHands(prev => {
+      currentAllHands = prev
       return prev
     })
-    return currentMyId
+    return currentAllHands
+  }
+
+  const getMyName = () => {
+    let currentMyName = ''
+    setMyName(prev => {
+      currentMyName = prev
+      return prev
+    })
+    return currentMyName
   }
 
   const join = (webrtc) => {
@@ -85,27 +115,43 @@ function App() {
   }
 
   // Next player's turn:
-  const advanceTurn = (currTurn = turn, peerCount = peers.length) =>
-    setTurn((currTurn + 1) % peerCount)
+  const advanceTurn = (currTurn = turn, currentPeers = peers) => {
+    setTurn((currTurn + 1) % currentPeers.length)
+    // setMyTurn(currentPeers[currTurn] && currentPeers[turn].id === myId)
+  }
 
   const handleCreatedPeer = (webrtc, peer) => {
-    if (gameStarted) return
+    // if (gameStarted) return // commented for revival to work
     addChat(`Peer-${peer.id.substring(0, 5)} joined the room!`, ' ', true)
     let newPeers = []
     setPeers(prev => {
       newPeers = [...prev, { ...peer, ready: false }].sort((a, b) => a.id.localeCompare(b.id))
       return newPeers
     })
+  }
 
-    // TODO: Move this to where the game begins.
+  const startGame = (currentPeers, webrtc) => {
     // Reset the turn to the first player:
     setTurn(0)
-
-    // TODO: Move to where the game begins.
-    const shuffledCards = createShuffledDeck(newPeers[0].id)
+    advanceTurn(0, currentPeers)
+    // Shuffle cards based on first peer id, and deal them evenly:
+    const currentMyId = webrtc.connection.connection.id
+    const shuffledCards = createShuffledDeck(currentPeers[0].id)
     setCards(shuffledCards)
-    const myIndex = newPeers.map(p => p.id).indexOf(getMyId())
-    setHand(getHand(shuffledCards, myIndex, newPeers.length, shuffledCards.length))
+    const myIndex = currentPeers.map(p => p.id).indexOf(currentMyId)
+    setHand(getHand(shuffledCards, myIndex, currentPeers.length, shuffledCards.length))
+    // Keep track of all other hands (for recovery):
+    let dealtHands = []
+    for (let i = 0; i < currentPeers.length; i++) {
+      dealtHands = [...dealtHands, {
+        id: currentPeers[i].id,
+        name: '',
+        hand: getHand(shuffledCards, i, currentPeers.length, shuffledCards.length)
+      }]
+    }
+    setAllHands(dealtHands)
+    // console.log(currentPeers)
+    // console.log(getHand(shuffledCards, myIndex, currentPeers.length, shuffledCards.length))
   }
 
   // const handleShut = () => {
@@ -114,22 +160,87 @@ function App() {
   //   this.props.webrtc.disconnect()
   // }
 
+  const updateHand = (peer, payload, currentAllHands, currentPeers) => {
+    let peerIndex
+    for (peerIndex = 0; peerIndex < currentPeers.length; peerIndex++) {
+      if (currentAllHands[peerIndex].id === peer.id) {
+        break
+      }
+    }
+
+    // Remove played cards from peer's remaining hand
+    for (let j = 0; j < payload.length; j++) {
+      for (let i = 0; i < currentAllHands[peerIndex].hand.length; i++) {
+        if (payload[j].suit === currentAllHands[peerIndex].hand[i].suit
+          && payload[j].rank === currentAllHands[peerIndex].hand[i].rank) {
+          currentAllHands[peerIndex].hand.splice(i, 1)
+          break
+        }
+      }
+    }
+
+    // Update name:
+    // eslint-disable-next-line no-param-reassign
+    currentAllHands[peerIndex].name = currentPeers[peerIndex].name
+
+    return currentAllHands
+  }
+
+  const indexOfName = (givenName, currentAllHands) => {
+    // console.log(givenName, currentAllHands)
+    for (let i = 0; i < currentAllHands.length; i++) {
+      if (givenName === currentAllHands[i].name) {
+        return i
+      }
+    }
+    return -1
+  }
+
+  const checkRevive = (webrtc, peerName, currentAllHands) => {
+    // Check if the player was already in the game previously (based on name)
+    const peerIndex = indexOfName(peerName, currentAllHands)
+    if (peerIndex !== -1) {
+      // console.log('send revive',currentAllHands)
+      // TODO: improvement: use only one node to "shout"
+      webrtc.shout('revive', currentAllHands) // Security issue: Anyone can get anyones cards if they know other's names.
+      setTurn(0) // TODO: Improvement: don't reset turn, but use the previous one from peers
+    }
+  }
+
+  const reviveOwnHand = (receivedAllHands) => {
+    const peerIndex = indexOfName(getMyName(), receivedAllHands)
+    // console.log(peerIndex)
+    // console.log('received revival',receivedAllHands)
+    if (peerIndex !== -1) {
+      setHand(receivedAllHands[peerIndex].hand)
+    }
+    setAllHands(receivedAllHands)
+    setTurn(0) // TODO: Improvement: don't reset turn, but use the previous one from peers
+    // setMyId(receivedAllHands[peerIndex].id)
+  }
+
   // eslint-disable-next-line no-unused-vars
   const handlePeerData = (webrtc, type, payload, peer) => {
+    let currentPeers = getPeers()
+    const currentAllHands = getAllHands()
     switch (type) {
       // Client signals it is ready to start
       case 'ready': {
-        let currentPeers = getPeers()
-        currentPeers = currentPeers.map(p => p.id === peer.id ? { ...peer, ready: true } : p)
+        currentPeers = currentPeers.map(p => p.id === peer.id ? { ...peer, ready: true, name: payload } : p)
         setPeers(currentPeers)
         addChat(`Peer-${peer.id.substring(0, 5)} is ready!`, ' ', true)
+        checkRevive(webrtc, payload, currentAllHands)
+        // If they were the last one to press ready, start game:
+        if (hasGameStarted(currentPeers)) {
+          startGame(currentPeers, webrtc)
+        }
         break
       }
       case 'win': {
         console.log("game over")
         addChat(`Peer-${peer.id.substring(0, 5)} won!`, ' ', true)
         // reset all state
-        const currentPeers = getPeers().map(p => { return { ...p, ready: false } })
+        currentPeers = getPeers().map(p => { return { ...p, ready: false } })
         setPeers(currentPeers)
         setReady(false)
         setHand([])
@@ -139,11 +250,16 @@ function App() {
       }
       case 'play': {
         setTable(payload)
-        advanceTurn(getTurn(), getPeers().length) // bug: peers.length or turn does not work here
+        advanceTurn(getTurn(), currentPeers) // bug: peers.length or turn does not work here
+        setAllHands(updateHand(peer, payload, currentAllHands, currentPeers))
         break
       }
       case 'pass': {
-        advanceTurn(getTurn(), getPeers().length)
+        advanceTurn(getTurn(), currentPeers)
+        break
+      }
+      case 'revive': {
+        reviveOwnHand(payload)
         break
       }
       default:
@@ -166,7 +282,12 @@ function App() {
     } else if (currTurn > disconnectedPeerIndex) {
       setTurn(currTurn - 1)
     }
-    setPeers(currPeers.filter((p) => !p.closed))
+    console.log('myid',webrtc.connection.connection.id, 'rem peer',disconnectedPeerIndex)
+    currPeers.splice(disconnectedPeerIndex, 1)
+    setPeers([...currPeers])
+    // eslint-disable-next-line react/no-this-in-sfc
+    forceUpdate()
+    // setWrtc(webrtc)
   }
 
   const sendWin = () => {
@@ -204,16 +325,23 @@ function App() {
     advanceTurn()
   }
 
-  const sendReady = () => {
+  const sendReady = (name) => {
     if (wrtc) {
-      wrtc.shout('ready', "")
+      wrtc.shout('ready', name)
     }
     setReady(true)
-    setPeers(peers.map(p => p.id === myId ? { ...p, ready: true } : p))
+    setMyName(name)
+    const newPeers = peers.map(p => p.id === myId ? { ...p, ready: true } : p)
+    setPeers(newPeers)
+    // If all others pressed ready already, start the game:
+    if (hasGameStarted(newPeers)) {
+      startGame(newPeers, wrtc)
+    }
   }
 
+  console.log('myId', myId, 'turn', turn, 'peers',peers)
   const myTurn = peers[turn] && peers[turn].id === myId
-  console.log(peers)
+
   return (
     <div className="App">
       <LioWebRTC
