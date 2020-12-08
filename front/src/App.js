@@ -68,7 +68,7 @@ function App() {
   }
 
   const join = (webrtc) => {
-    webrtc.joinRoom('big-asd-game')
+    webrtc.joinRoom('big-sad-game')
     setWrtc(webrtc)
     setPeers([{ id: webrtc.connection.connection.id, ready: false }]) // Add self
     setMyId(webrtc.connection.connection.id)
@@ -119,20 +119,33 @@ function App() {
     switch (type) {
       // Client signals it is ready to start
       case 'ready': {
-        console.log("got ready event")
         let currentPeers = getPeers()
         currentPeers = currentPeers.map(p => p.id === peer.id ? { ...peer, ready: true } : p)
         setPeers(currentPeers)
         addChat(`Peer-${peer.id.substring(0, 5)} is ready!`, ' ', true)
         break
       }
-      case 'play':
+      case 'win': {
+        console.log("game over")
+        addChat(`Peer-${peer.id.substring(0, 5)} won!`, ' ', true)
+        // reset all state
+        const currentPeers = getPeers().map(p => { return { ...p, ready: false } })
+        setPeers(currentPeers)
+        setReady(false)
+        setHand([])
+        setTable([])
+        setCards([])
+        break
+      }
+      case 'play': {
         setTable(payload)
         advanceTurn(getTurn(), getPeers().length) // bug: peers.length or turn does not work here
         break
-      case 'pass':
+      }
+      case 'pass': {
         advanceTurn(getTurn(), getPeers().length)
         break
+      }
       default:
     }
   }
@@ -156,14 +169,32 @@ function App() {
     setPeers(currPeers.filter((p) => !p.closed))
   }
 
+  const sendWin = () => {
+    if (wrtc) {
+      wrtc.shout('win', '')
+    }
+  }
+
   const sendPlay = (cardsToPlay) => {
     if (wrtc) {
       wrtc.shout('play', cardsToPlay)
     }
     setTable(cardsToPlay)
-    setHand(hand.filter((c) => !contains(c, cardsToPlay)))
+    const newHand = hand.filter((c) => !contains(c, cardsToPlay))
+    setHand(newHand)
     advanceTurn()
-    // TODO: If hand.length === 0, addChat("peer myId won!"), and remove from active game.
+    if (newHand.length === 0) {
+      addChat(`You win!`)
+      sendWin()
+      const cp = peers.map(p => { return { ...p, ready: false } })
+      // reset all state
+      setPeers(cp)
+      setReady(false)
+      setHand([])
+      setTable([])
+      setCards([])
+
+    }
   }
 
   const sendPass = () => {
@@ -178,12 +209,11 @@ function App() {
       wrtc.shout('ready', "")
     }
     setReady(true)
-    console.log("updating self")
     setPeers(peers.map(p => p.id === myId ? { ...p, ready: true } : p))
   }
 
   const myTurn = peers[turn] && peers[turn].id === myId
-
+  console.log(peers)
   return (
     <div className="App">
       <LioWebRTC
