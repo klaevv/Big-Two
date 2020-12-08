@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React, { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { LioWebRTC } from "react-liowebrtc"
@@ -38,12 +39,13 @@ function App() {
   }
 
   const addChat = (name, message, alert = false) => {
-    setChatLog(chatLog.concat({
+    const logItem = {
       name,
       message: `${message}`,
       timestamp: `${Date.now()}`,
       alert
-    }))
+    }
+    setChatLog(prev => [...prev, logItem])
   }
 
   const handleCreatedPeer = (webrtc, peer) => {
@@ -55,7 +57,7 @@ function App() {
     setTurn(0)
   }
 
-    // const handleShut = () => {
+  // const handleShut = () => {
   //   this.setState({ containerClass: 'container animated hinge' })
   //   this.props.webrtc.leaveRoom()
   //   this.props.webrtc.disconnect()
@@ -68,7 +70,7 @@ function App() {
       case 'play':
         setTable(payload)
         // Next player's turn:
-        setTurn((turn+1) % peers.length)
+        setTurn((turn + 1) % peers.length)
         break
       default:
         return
