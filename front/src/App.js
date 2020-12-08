@@ -58,7 +58,6 @@ function App() {
   const handleCreatedPeer = (webrtc, peer) => {
     addChat(`Peer-${peer.id.substring(0, 5)} joined the room!`, ' ', true)
     setPeers(prev => [...prev, { ...peer, ready: false }].sort((a, b) => a.id.localeCompare(b.id)))
-
     // TODO: Move this to where the game begins.
     // Reset the turn to the first player:
     setTurn(0)
@@ -123,8 +122,7 @@ function App() {
     setPeers(peers.map(p => p.id === myId ? { ...p, ready: true } : p))
   }
 
-  const allReady = peers.length > 0 ? peers.every(p => p.ready === true): false
-  console.log(`all: ${allReady}`)
+  // const allReady = peers.length > 0 ? peers.every(p => p.ready === true): false
   console.log(peers)
 
 
