@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 const HomePage = (props) => {
-  const { chatLog, sendPlay, table, hand, myTurn, sendPass } = props
+  const { chatLog, sendPlay, table, hand, myTurn, ready, sendReady, gameStarted, sendPass } = props
 
   const generateChats = () => {
     return chatLog.map((item) => (
@@ -82,12 +82,18 @@ const HomePage = (props) => {
   const handlePlayCard = () => {
     if (hand.length > 0) {
       // Check that combination is legit (possible to play)
-      // Check that combination is legit (possible to play)
       sendPlay([hand[0]]) // Send a combination or a single card.
     }
   }
 
-  const actionButtonDisabled = hand.length === 0 || !myTurn
+  const handleReady = () => {
+    sendReady()
+  }
+
+  // are all clients ready?
+
+  const actionButtonDisabled = hand.length === 0 || !myTurn || !gameStarted
+
 
   return (
     <div className="homePage">
@@ -105,6 +111,8 @@ const HomePage = (props) => {
           Play a card
         </button>
         <br />
+        <button type="button" hidden={ready} onClick={handleReady}>Ready to start</button>
+        <br />
         <button type="button" disabled={actionButtonDisabled} onClick={sendPass}>Pass</button>
       </div>
     </div>
@@ -118,14 +126,22 @@ HomePage.propTypes = {
   table: PropTypes.arrayOf(PropTypes.string),
   hand: PropTypes.arrayOf(PropTypes.string),
   myTurn: PropTypes.bool,
+  ready: PropTypes.bool,
+  sendReady: PropTypes.func,
+  gameStarted: PropTypes.bool,
+  // peers: PropTypes.arrayOf(PropTypes.object),
 }
 HomePage.defaultProps = {
   chatLog: [],
-  sendPlay: () => {},
-  sendPass: () => {},
+  sendPlay: () => { },
+  sendPass: () => { },
   table: [],
   hand: [],
   myTurn: false,
+  ready: false,
+  sendReady: () => { },
+  gameStarted: false,
+  // peers: [],
 }
 
 export default HomePage
