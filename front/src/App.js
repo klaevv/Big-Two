@@ -128,8 +128,13 @@ function App() {
       case 'win': {
         console.log("game over")
         addChat(`Peer-${peer.id.substring(0, 5)} won!`, ' ', true)
+        // reset all state
         const currentPeers = getPeers().map(p => { return { ...p, ready: false } })
         setPeers(currentPeers)
+        setReady(false)
+        setHand([])
+        setTable([])
+        setCards([])
         break
       }
       case 'play': {
@@ -175,17 +180,22 @@ function App() {
       wrtc.shout('play', cardsToPlay)
     }
     setTable(cardsToPlay)
-    setHand(hand.filter((c) => !contains(c, cardsToPlay)))
+    const newHand = hand.filter((c) => !contains(c, cardsToPlay))
+    setHand(newHand)
     advanceTurn()
-    if (hand.length === 0) {
+    if (newHand.length === 0) {
       addChat(`You win!`)
       sendWin()
-      const cp = getPeers().map(p => { return { ...p, ready: false } })
+      const cp = peers.map(p => { return { ...p, ready: false } })
+      // reset all state
       setPeers(cp)
+      setReady(false)
+      setHand([])
+      setTable([])
+      setCards([])
+
     }
   }
-
-
 
   const sendPass = () => {
     if (wrtc) {
@@ -203,7 +213,7 @@ function App() {
   }
 
   const myTurn = peers[turn] && peers[turn].id === myId
-
+  console.log(peers)
   return (
     <div className="App">
       <LioWebRTC
