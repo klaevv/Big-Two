@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 const HomePage = (props) => {
-  const { chatLog, sendPlay, table, hand, myTurn, ready, sendReady } = props
+  const { chatLog, sendPlay, table, hand, myTurn, ready, sendReady, gameStarted } = props
 
   const generateChats = () => {
     return chatLog.map((item) => (
@@ -26,7 +26,7 @@ const HomePage = (props) => {
   // are all clients ready?
   // const showReadyButton = peers.map(p => Object.prototype.hasOwnProperty.call(p, 'ready') ? p.ready : false).some(val => val)
 
-  const playButtonDisabled = hand.length === 0 || !myTurn
+  const playButtonDisabled = hand.length === 0 || !myTurn || !gameStarted
 
 
   return (
@@ -52,6 +52,7 @@ HomePage.propTypes = {
   myTurn: PropTypes.bool,
   ready: PropTypes.bool,
   sendReady: PropTypes.func,
+  gameStarted: PropTypes.bool,
   // peers: PropTypes.arrayOf(PropTypes.object),
 }
 HomePage.defaultProps = {
@@ -62,6 +63,7 @@ HomePage.defaultProps = {
   myTurn: false,
   ready: false,
   sendReady: () => { },
+  gameStarted: false,
   // peers: [],
 }
 

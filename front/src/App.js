@@ -28,11 +28,15 @@ function App() {
   const [turn, setTurn] = useState(0)
   const [wrtc, setWrtc] = useState() // TODO: Temp solution
   const [ready, setReady] = useState(false) // Am I ready?
+  // const [gamePeers, setGamePeers] = useState([])
 
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.log('pathname', location.pathname)
   }, [location])
+
+  // Everyone is ready and there are at least 2 players
+  const gameStarted = peers.length > 1 ? peers.every(p => p.ready === true) : false
 
   const getTurn = () => {
     let currentTurn = 0
@@ -53,7 +57,7 @@ function App() {
   }
 
   const join = (webrtc) => {
-    webrtc.joinRoom('big-twooo-game')
+    webrtc.joinRoom('big-2hu-game')
     setWrtc(webrtc)
     setPeers([{ id: webrtc.connection.connection.id, ready: false }]) // Add self
     setMyId(webrtc.connection.connection.id)
@@ -74,6 +78,7 @@ function App() {
     setTurn((currTurn + 1) % peerCount)
 
   const handleCreatedPeer = (webrtc, peer) => {
+    if (gameStarted) return
     addChat(`Peer-${peer.id.substring(0, 5)} joined the room!`, ' ', true)
     setPeers(prev => [...prev, { ...peer, ready: false }].sort((a, b) => a.id.localeCompare(b.id)))
     // TODO: Move this to where the game begins.
@@ -96,8 +101,6 @@ function App() {
         let currentPeers = getPeers()
         currentPeers = currentPeers.map(p => p.id === peer.id ? { ...peer, ready: true } : p)
         setPeers(currentPeers)
-        console.log(peers)
-        // if all done start game
         addChat(`Peer-${peer.id.substring(0, 5)} is ready!`, ' ', true)
         break
       }
@@ -147,8 +150,7 @@ function App() {
     setPeers(peers.map(p => p.id === myId ? { ...p, ready: true } : p))
   }
 
-  // const allReady = peers.length > 0 ? peers.every(p => p.ready === true): false
-  console.log(peers)
+
 
 
   // console.log(myId, turn, peers[turn], peers)
@@ -171,6 +173,7 @@ function App() {
           ready={ready}
           sendReady={sendReady}
           peers={peers}
+          gameStarted={gameStarted}
         />
       </LioWebRTC>
     </div>
