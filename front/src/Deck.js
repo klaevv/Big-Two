@@ -1,7 +1,5 @@
 /* eslint-disable */
 
-const { __esModule } = require("react-liowebrtc");
-
 // https://codereview.stackexchange.com/questions/149894/making-a-semi-random-order-of-an-array-based-on-a-string/150016
 
 // creates a random number generator function.

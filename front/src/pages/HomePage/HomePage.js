@@ -4,6 +4,7 @@ import PropTypes from 'prop-types'
 const HomePage = (props) => {
   const { chatLog, sendPlay, table, hand, myTurn, ready, sendReady, gameStarted, sendPass } = props
   const [selected, setSelected] = useState([])
+  const [name, setName] = useState([])
 
   const generateChats = () => {
     return chatLog.map((item) => (
@@ -98,13 +99,12 @@ const HomePage = (props) => {
   }
 
   const handleReady = () => {
-    sendReady()
+    sendReady(name)
   }
 
   // are all clients ready?
 
   const actionButtonDisabled = hand.length === 0 || !myTurn || !gameStarted
-
 
   // TODO: Sort hand
 
@@ -113,21 +113,27 @@ const HomePage = (props) => {
       <div className="homePageContainer">
         <h1>Big Two</h1>
         {generateChats()}
-        <span style={{ color: '#888' }}>On the table: </span>
+        <span hidden={!ready} style={{ color: '#888' }}>On the table: </span>
+        <br />
         {table.map(card => (
           <span style={{ color: '#888' }} key={`span-${card.suit}-${card.rank}`}>
             {card.suit}{card.rank},
           </span>
         ))}
         <br />
-        <button type="button" disabled={actionButtonDisabled} onClick={handlePlayCards}>Play selected cards</button>
+        <button type="button" hidden={!ready} disabled={actionButtonDisabled} onClick={handlePlayCards}>Play selected cards</button>
+        <span hidden={ready} style={{ color: '#888' }}>Name: </span>
+        <input type="text" value={name} hidden={ready} onChange={(e) => setName(e.target.value)} />
         <br />
-        <button type="button" hidden={ready} onClick={handleReady}>Ready to start</button>
+        <button type="button" disabled={name.length === 0} hidden={ready} onClick={handleReady}>
+          Ready to start
+        </button>
         <br />
-        <button type="button" disabled={actionButtonDisabled} onClick={sendPass}>Pass</button>
+        <button type="button" disabled={actionButtonDisabled} hidden={!ready} onClick={sendPass}>Pass</button>
+        <br />
         <br />
         <form>
-          {hand.map((card, index) => (
+          {ready ? hand.map((card, index) => (
             <div key={`div-${card.suit}-${card.rank}`}>
               <input
                 type="checkbox"
@@ -144,7 +150,7 @@ const HomePage = (props) => {
                 {card.suit}{card.rank}
               </label>
             </div>
-          ))}
+          )) : null}
         </form>
       </div>
     </div>
