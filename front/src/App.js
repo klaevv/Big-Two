@@ -182,10 +182,6 @@ function App() {
     setPeers(peers.map(p => p.id === myId ? { ...p, ready: true } : p))
   }
 
-
-
-
-  // console.log(myId, turn, peers[turn], peers)
   const myTurn = peers[turn] && peers[turn].id === myId
 
   return (

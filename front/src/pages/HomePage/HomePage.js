@@ -120,7 +120,7 @@ const HomePage = (props) => {
           </span>
         ))}
         <br />
-        <button type="button" disabled={actionButtonDisabled} onClick={handlePlayCards}>Play a card</button>
+        <button type="button" disabled={actionButtonDisabled} onClick={handlePlayCards}>Play selected cards</button>
         <br />
         <button type="button" hidden={ready} onClick={handleReady}>Ready to start</button>
         <br />
