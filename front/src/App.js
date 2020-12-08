@@ -20,6 +20,7 @@ function App() {
   const location = useLocation()
 
   const [peers, setPeers] = useState([]) // Players
+  const [myId, setMyId] = useState('')
   // TODO: bug: chatLog resets? Try with 3 players.
   const [chatLog, setChatLog] = useState([]) // Right now just 'Player joined' notifications
   const [hand, setHand] = useState(['s1', 's2', 's3']) // The cards the player is holding.
@@ -35,7 +36,8 @@ function App() {
   const join = (webrtc) => {
     webrtc.joinRoom('big-two-game')
     setWrtc(webrtc)
-    setPeers([{ id: webrtc.id }]) // Add self
+    setPeers([{ id: webrtc.connection.connection.id }]) // Add self
+    setMyId(webrtc.connection.connection.id)
   }
 
   const addChat = (name, message, alert = false) => {
@@ -48,9 +50,13 @@ function App() {
     setChatLog(prev => [...prev, logItem])
   }
 
+  // Next player's turn:
+  const advanceTurn = (currTurn = turn, peerCount = peers.length) =>
+    setTurn((currTurn + 1) % peerCount)
+
   const handleCreatedPeer = (webrtc, peer) => {
     addChat(`Peer-${peer.id.substring(0, 5)} joined the room!`, ' ', true)
-    setPeers([...peers, peer].sort((a, b) => a.id.localeCompare(b.id)))
+    setPeers(prev => [...prev, peer].sort((a, b) => a.id.localeCompare(b.id)))
 
     // TODO: Move this to where the game begins.
     // Reset the turn to the first player:
@@ -65,12 +71,21 @@ function App() {
 
   // eslint-disable-next-line no-unused-vars
   const handlePeerData = (webrtc, type, payload, peer) => {
-    console.log('received', type, payload)
+    let currentPeersLength = 0
+    setPeers(prev => {
+      currentPeersLength = prev.length
+      return prev
+    })
+    let currentTurn = 0
+    setTurn(prev => {
+      currentTurn = prev
+      return prev
+    })
+
     switch (type) {
       case 'play':
         setTable(payload)
-        // Next player's turn:
-        setTurn((turn + 1) % peers.length)
+        advanceTurn(currentTurn, currentPeersLength) // bug: peers.length or turn does not work here
         break
       default:
         return
@@ -80,6 +95,7 @@ function App() {
   // eslint-disable-next-line no-unused-vars
   const handleRemovedPeer = (webrtc, peer) => {
     setPeers(peers.filter(p => !p.closed))
+    // TODO: who's turn?
   }
 
   const sendPlay = (cards) => {
@@ -88,13 +104,9 @@ function App() {
     }
     setTable(cards)
     setHand(hand.filter(c => !contains(c, cards)))
+    advanceTurn()
   }
 
-  let myId = ''
-  if (wrtc) {
-    myId = wrtc.id
-  }
-  // console.log(myId, turn, peers[turn], peers)
   const myTurn = peers[turn] && peers[turn].id === myId
 
   return (
