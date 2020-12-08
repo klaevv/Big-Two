@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 const HomePage = (props) => {
-  const { chatLog, sendPlay, table, hand, myTurn } = props
+  const { chatLog, sendPlay, table, hand, myTurn, sendPass } = props
 
   const generateChats = () => {
     return chatLog.map((item) => (
@@ -18,7 +18,7 @@ const HomePage = (props) => {
     }
   }
 
-  const playButtonDisabled = hand.length === 0 || !myTurn
+  const actionButtonDisabled = hand.length === 0 || !myTurn
 
   return (
     <div className="homePage">
@@ -28,7 +28,9 @@ const HomePage = (props) => {
         <span style={{ color: '#888' }}>On the table: </span>
         {table.map(card => <span style={{ color: '#888' }} key={card}>{card}</span>)}
         <br />
-        <button type="button" disabled={playButtonDisabled} onClick={handlePlayCard}>Play a card</button>
+        <button type="button" disabled={actionButtonDisabled} onClick={handlePlayCard}>Play a card</button>
+        <br />
+        <button type="button" disabled={actionButtonDisabled} onClick={sendPass}>Pass</button>
       </div>
     </div>
   )
@@ -37,6 +39,7 @@ const HomePage = (props) => {
 HomePage.propTypes = {
   chatLog: PropTypes.arrayOf(PropTypes.object),
   sendPlay: PropTypes.func,
+  sendPass: PropTypes.func,
   table: PropTypes.arrayOf(PropTypes.string),
   hand: PropTypes.arrayOf(PropTypes.string),
   myTurn: PropTypes.bool,
@@ -44,6 +47,7 @@ HomePage.propTypes = {
 HomePage.defaultProps = {
   chatLog: [],
   sendPlay: () => {},
+  sendPass: () => {},
   table: [],
   hand: [],
   myTurn: false,

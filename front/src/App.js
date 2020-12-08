@@ -94,6 +94,9 @@ function App() {
         setTable(payload)
         advanceTurn(getTurn(), getPeers().length) // bug: peers.length or turn does not work here
         break
+      case 'pass':
+        advanceTurn(getTurn(), getPeers().length)
+        break
       default:
         return
     };
@@ -125,8 +128,17 @@ function App() {
     setTable(cards)
     setHand(hand.filter(c => !contains(c, cards)))
     advanceTurn()
+    // TODO: If hand.length === 0, addChat("peer myId won!"), and remove from active game.
   }
 
+  const sendPass = () => {
+    if (wrtc) {
+      wrtc.shout('pass', '')
+    }
+    advanceTurn()
+  }
+
+  console.log(myId, turn, peers)
   const myTurn = peers[turn] && peers[turn].id === myId
 
   return (
@@ -142,6 +154,7 @@ function App() {
           hand={hand}
           table={table}
           sendPlay={sendPlay}
+          sendPass={sendPass}
           myTurn={myTurn}
         />
       </LioWebRTC>
