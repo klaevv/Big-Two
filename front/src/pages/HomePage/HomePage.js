@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 const HomePage = (props) => {
-  const { chatLog, sendPlay, table, hand, myTurn, ready, sendReady, peers } = props
+  const { chatLog, sendPlay, table, hand, myTurn, ready, sendReady } = props
 
   const generateChats = () => {
     return chatLog.map((item) => (
@@ -52,7 +52,7 @@ HomePage.propTypes = {
   myTurn: PropTypes.bool,
   ready: PropTypes.bool,
   sendReady: PropTypes.func,
-  peers: PropTypes.arrayOf(PropTypes.object),
+  // peers: PropTypes.arrayOf(PropTypes.object),
 }
 HomePage.defaultProps = {
   chatLog: [],
@@ -62,7 +62,7 @@ HomePage.defaultProps = {
   myTurn: false,
   ready: false,
   sendReady: () => { },
-  peers: [],
+  // peers: [],
 }
 
 export default HomePage
