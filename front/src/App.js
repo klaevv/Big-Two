@@ -82,6 +82,15 @@ function App() {
     return currentAllHands
   }
 
+  const getMyName = () => {
+    let currentMyName = ''
+    setMyName(prev => {
+      currentMyName = prev
+      return prev
+    })
+    return currentMyName
+  }
+
   const join = (webrtc) => {
     webrtc.joinRoom('big-sad-game')
     setWrtc(webrtc)
@@ -132,8 +141,8 @@ function App() {
       }]
     }
     setAllHands(dealtHands)
-    console.log(currentPeers)
-    console.log(getHand(shuffledCards, myIndex, currentPeers.length, shuffledCards.length))
+    // console.log(currentPeers)
+    // console.log(getHand(shuffledCards, myIndex, currentPeers.length, shuffledCards.length))
   }
 
   // const handleShut = () => {
@@ -169,6 +178,7 @@ function App() {
   }
 
   const indexOfName = (givenName, currentAllHands) => {
+    // console.log(givenName, currentAllHands)
     for (let i = 0; i < currentAllHands.length; i++) {
       if (givenName === currentAllHands[i].name) {
         return i
@@ -181,13 +191,16 @@ function App() {
     // Check if the player was already in the game previously (based on name)
     const peerIndex = indexOfName(peerName, currentAllHands)
     if (peerIndex !== -1) {
+      // console.log('send revive',currentAllHands)
       // TODO: improvement: use only one node to "shout"
-      webrtc.shout('revive', getAllHands()) // Security issue: Anyone can get anyones cards if they know other's names.
+      webrtc.shout('revive', currentAllHands) // Security issue: Anyone can get anyones cards if they know other's names.
     }
   }
 
   const reviveOwnHand = (receivedAllHands) => {
-    const peerIndex = indexOfName(myName, getPeers())
+    const peerIndex = indexOfName(getMyName(), receivedAllHands)
+    // console.log(peerIndex)
+    // console.log('received revival',receivedAllHands)
     if (peerIndex !== -1) {
       setHand(receivedAllHands[peerIndex].hand)
     }
@@ -308,7 +321,7 @@ function App() {
       startGame(newPeers, wrtc)
     }
   }
-
+console.log('turn',turn)
   const myTurn = peers[turn] && peers[turn].id === myId
   console.log(peers)
   return (
