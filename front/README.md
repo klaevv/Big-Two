@@ -1,5 +1,5 @@
 # Big Two front
 
-Näin se toimii:
+## Howto
 
 `npm install && yarn start`
